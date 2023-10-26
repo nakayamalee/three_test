@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      margin: 0;
+    }
+
+    .btns {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 15px;
+    }
+
+    .btn {
+      padding: 10px 15px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="btns">
+    <button class="btn test1" type="button">test1</button>
+    <button class="btn test2" type="button">test2</button>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@latest/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@latest/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    // import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+    // import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+    import { FBXLoader } from 'three/addons/loaders/FBXLoader.js'
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0xFEFEFE);
+    document.body.appendChild(renderer.domElement);
+
+    const light = new THREE.AmbientLight(0x404040, 50); // soft white light
+    scene.add(light);
+
+    // const mtlLoader = new MTLLoader();
+    // // instantiate a loader
+
+    // mtlLoader.load(
+    //   './model/Car/Car-OBJ.mtl',
+    //   (mtl) => {
+    //     mtl.preload();
+    //     console.log(mtl);
+    //     const loader = new OBJLoader();
+    //     loader.setMaterials(mtl);
+    //     // load a resource
+    //     loader.load(
+    //       // resource URL
+    //       './model/Car/Car-OBJ.obj',
+    //       // called when resource is loaded
+    //       function (object) {
+    //         console.log(object);
+    //         scene.add(object);
+    //       },
+    //       // called when loading is in progresses
+    //       function (xhr) {
+    //         console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+    //       },
+    //       // called when loading has errors
+    //       function (error) {
+    //         console.log('An error happened');
+    //       }
+    //     );
+    //   }
+    // );
+    let mixer;
+    const fbxLoader = new FBXLoader();
+
+    fbxLoader.load(
+      './model/Car/Car-FBX-animation.fbx',
+      (object) => {
+        object.scale.multiplyScalar(0.01);
+        mixer = new THREE.AnimationMixer( scene );
+        let animate = mixer.clipAction(object.animations[0]);
+        scene.add(object);
+        animate.play();
+      },
+      (xhr) => {
+        console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
+      },
+      (error) => {
+        console.log(error)
+      }
+    )
+
+
+
+    camera.position.set(0, 5, 5);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+
+    const gridHelper = new THREE.GridHelper(24, 24);
+    scene.add(gridHelper);
+
+    const axesHelper = new THREE.AxesHelper(4);
+    scene.add(axesHelper);
+
+    let clock = new THREE.Clock();
+    function animate() {
+      let mixerUpdateDelta = clock.getDelta();
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+      if (mixer) mixer.update( mixerUpdateDelta );
+    }
+    animate();
+
+
+    window.addEventListener('resize', function () {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    const test1 = document.querySelector('.test1');
+    const test2 = document.querySelector('.test2');
+
+    test1.addEventListener('click', () => {
+      zoomInTimeline(10, 5, 3);
+    });
+    test2.addEventListener('click', () => {
+      console.log(2);
+      zoomInTimeline(7, 8, -5);
+    });
+
+    const zoomInTimeline = (x, y, z) => {
+      gsap.timeline({
+        defaults: {
+          duration: 1,
+          ease: "expo.out",
+        },
+        onUpdate: () => {
+          camera.lookAt(0, 0, 0);
+        },
+      }).to(camera.position, { x, y, z });
+    };
+  </script>
+</body>
+
+</html>
