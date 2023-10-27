@@ -142,7 +142,6 @@
       zoomInTimeline(10, 5, 3);
     });
     test2.addEventListener('click', () => {
-      console.log(2);
       zoomInTimeline(7, 8, -5);
     });
 
@@ -150,12 +149,21 @@
       gsap.timeline({
         defaults: {
           duration: 1,
-          ease: "expo.out",
+          ease: "ease",
         },
         onUpdate: () => {
           camera.lookAt(0, 0, 0);
         },
-      }).to(camera.position, { x, y, z });
+      })
+        .to(camera.position, { x, y, z })
+        .to(controls.target, {
+          x: 0,
+          y: 0,
+          z: 0,
+          onComplete: () => {
+            controls.update();
+          },
+        });
     };
   </script>
 </body>
